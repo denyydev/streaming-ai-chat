@@ -1,6 +1,12 @@
 import { Button } from "@/shared/ui";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useEffect, useRef, useState, type KeyboardEvent, type WheelEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type WheelEvent,
+} from "react";
 import {
   selectCommitVersion,
   selectIsGenerating,
@@ -62,7 +68,7 @@ function ChatList() {
   function lightScrollToBottom() {
     const container = containerRef.current;
     if (container) {
-      container.scrollTo({ top: container.scrollHeight, behavior: 'auto' });
+      container.scrollTo({ top: container.scrollHeight, behavior: "auto" });
     }
   }
 
@@ -175,10 +181,16 @@ function ChatList() {
   }
 
   return (
-    <div className="relative flex-1 bg-slate-50">
+    <div className="relative flex-1 bg-[#F4F6F8]">
       <div
         ref={containerRef}
-        className="h-full overflow-y-auto px-4 pt-4 pb-28"
+        className="
+        h-full overflow-y-auto
+        px-3 pt-3 pb-28 sm:px-4 sm:pt-4
+        outline-none
+        focus-visible:ring-2 focus-visible:ring-sky-200 focus-visible:ring-offset-2 focus-visible:ring-offset-[#F4F6F8]
+        [scrollbar-gutter:stable]
+      "
         onScroll={handleScroll}
         onWheel={handleWheel}
         onKeyDown={handleKeyDown}
@@ -194,10 +206,7 @@ function ChatList() {
           >
             {virtualizer.getVirtualItems().map((item) => {
               const id = messageIds[item.index];
-
-              if (!id) {
-                return null;
-              }
+              if (!id) return null;
 
               return (
                 <div
@@ -210,7 +219,7 @@ function ChatList() {
                     width: "100%",
                     transform: `translateY(${item.start}px)`,
                   }}
-                  className="py-1.5"
+                  className="py-1.5 sm:py-2"
                 >
                   <ChatListItem id={id} />
                 </div>
@@ -220,14 +229,28 @@ function ChatList() {
         </div>
       </div>
 
-      <div className="pointer-events-none absolute inset-x-0 bottom-24 z-20 flex items-center justify-end px-4">
+      <div className="pointer-events-none absolute inset-x-0 bottom-24 z-20 flex items-center justify-end px-3 sm:px-4">
         {(!isAtBottom || autoScrollLockRef.current) && (
           <div className="pointer-events-auto">
             <Button
-              className="h-9 rounded-full border border-slate-200 bg-white px-3 text-sm text-slate-700 shadow-sm hover:bg-slate-50 active:bg-slate-100"
+              className="
+              group
+              inline-flex h-10 items-center gap-2 rounded-full
+              border border-slate-200 bg-white/95 px-3.5
+              text-sm font-medium text-slate-700 shadow-sm
+              backdrop-blur
+              cursor-pointer select-none
+              hover:bg-white hover:shadow
+              active:scale-[0.99] active:bg-slate-50
+              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-200 focus-visible:ring-offset-2 focus-visible:ring-offset-[#F4F6F8]
+              disabled:cursor-not-allowed disabled:opacity-60
+            "
               onClick={handleJumpToBottom}
             >
-              Jump to bottom
+              <span className="leading-none">Вниз</span>
+              <span className="text-slate-400 transition-colors group-hover:text-slate-500">
+                ↓
+              </span>
             </Button>
           </div>
         )}

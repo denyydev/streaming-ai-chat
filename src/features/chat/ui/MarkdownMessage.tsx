@@ -1,127 +1,108 @@
-import { useEffect, useState } from 'react'
-import { useChatStore } from '../model/store'
-import { selectIsGenerating, selectMessageById } from '../model/selectors'
-import type { MarkdownNode, MessageId, MarkdownParagraphNode, MarkdownCodeBlockNode } from '../model/types'
-import { requestMarkdownParse } from '../lib/worker'
+import { useEffect, useState } from "react";
+import { requestMarkdownParse } from "../lib/worker";
+import { selectIsGenerating, selectMessageById } from "../model/selectors";
+import { useChatStore } from "../model/store";
+import type {
+  MarkdownCodeBlockNode,
+  MarkdownNode,
+  MarkdownParagraphNode,
+  MessageId,
+} from "../model/types";
 
 type MarkdownMessageProps = {
-  messageId: MessageId
-}
+  messageId: MessageId;
+};
 
 function renderParagraph(node: MarkdownParagraphNode, key: number) {
   return (
-    <p key={key} className="mb-1 last:mb-0">
+    <p key={key} className="mb-2 last:mb-0 whitespace-pre-wrap break-words">
       {node.children.map((child, index) => {
-        if (child.type === 'bold') {
+        if (child.type === "bold") {
           return (
             <strong key={index} className="font-semibold">
               {child.children.map((inner, innerIndex) => (
-                <span key={innerIndex} className="whitespace-pre-wrap break-words">
-                  {inner.value}
-                </span>
+                <span key={innerIndex}>{inner.value}</span>
               ))}
             </strong>
-          )
+          );
         }
 
-        return (
-          <span key={index} className="whitespace-pre-wrap break-words">
-            {child.value}
-          </span>
-        )
+        return <span key={index}>{child.value}</span>;
       })}
     </p>
-  )
+  );
 }
 
 function renderCodeBlock(node: MarkdownCodeBlockNode, key: number) {
   return (
-    <pre
-      key={key}
-      className="mb-1 overflow-x-auto rounded-md bg-slate-900 px-3 py-2 text-xs leading-relaxed"
-    >
-      <code className="whitespace-pre">
-        {node.code}
-      </code>
-    </pre>
-  )
+    <div key={key} className="mb-2 last:mb-0">
+      <pre
+        className="
+          overflow-x-auto
+          rounded-xl
+          border border-slate-200
+          bg-slate-50
+          px-3 py-2
+          text-[13px] leading-relaxed
+          text-slate-900
+        "
+      >
+        <code className="block whitespace-pre font-mono">{node.code}</code>
+      </pre>
+    </div>
+  );
 }
 
 function renderNodes(nodes: MarkdownNode[]) {
   return nodes.map((node, index) => {
-    if (node.type === 'paragraph') {
-      return renderParagraph(node, index)
-    }
-
-    return renderCodeBlock(node, index)
-  })
+    if (node.type === "paragraph") return renderParagraph(node, index);
+    return renderCodeBlock(node, index);
+  });
 }
 
 function MarkdownMessage({ messageId }: MarkdownMessageProps) {
-  const message = useChatStore((state) => selectMessageById(state, messageId))
-  const isGenerating = useChatStore(selectIsGenerating)
-  const [nodes, setNodes] = useState<MarkdownNode[] | null>(null)
+  const message = useChatStore((state) => selectMessageById(state, messageId));
+  const isGenerating = useChatStore(selectIsGenerating);
+  const [nodes, setNodes] = useState<MarkdownNode[] | null>(null);
 
   useEffect(() => {
     if (!message) {
-      setNodes(null)
-      return
+      setNodes(null);
+      return;
     }
 
-    if (message.status === 'streaming' || isGenerating) {
-      setNodes(null)
-      return
+    if (message.status === "streaming" || isGenerating) {
+      setNodes(null);
+      return;
     }
 
-    const currentId = message.id
-    const currentVersion = message.updatedAt
-    const text = message.text
-    let cancelled = false
+    const currentId = message.id;
+    const currentVersion = message.updatedAt;
+    const text = message.text;
+    let cancelled = false;
 
-    requestMarkdownParse({
-      id: currentId,
-      version: currentVersion,
-      text,
-    })
+    requestMarkdownParse({ id: currentId, version: currentVersion, text })
       .then((ast) => {
-        if (cancelled) {
-          return
-        }
-
-        setNodes(ast)
+        if (!cancelled) setNodes(ast);
       })
       .catch(() => {
-        if (cancelled) {
-          return
-        }
-
-        setNodes(null)
-      })
+        if (!cancelled) setNodes(null);
+      });
 
     return () => {
-      cancelled = true
-    }
-  }, [message?.id, message?.updatedAt, message?.status, isGenerating])
+      cancelled = true;
+    };
+  }, [message?.id, message?.updatedAt, message?.status, isGenerating]);
 
-  if (!message) {
-    return null
-  }
+  if (!message) return null;
 
   if (!nodes) {
     return (
-      <span className="whitespace-pre-wrap break-words">
-        {message.text}
-      </span>
-    )
+      <div className="whitespace-pre-wrap break-words">{message.text}</div>
+    );
   }
 
-  return (
-    <div>
-      {renderNodes(nodes)}
-    </div>
-  )
+  return <div>{renderNodes(nodes)}</div>;
 }
 
-export default MarkdownMessage
-
-
+export default MarkdownMessage;

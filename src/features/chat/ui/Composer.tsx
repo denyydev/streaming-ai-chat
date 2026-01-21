@@ -4,24 +4,33 @@ import StopButton from "./controls/StopButton";
 
 function Composer() {
   return (
-    <div className="sticky bottom-0 z-10 border-t border-slate-200/60 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70">
-      <div className="mx-auto w-full max-w-4xl px-4 py-3">
-        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="flex flex-col gap-3 p-3">
-            <div className="flex gap-3">
-              <div className="flex-1">
-                <Textarea
-                  placeholder="Сообщение..."
-                  className="min-h-[96px] resize-none"
-                />
-              </div>
-              <div className="flex flex-col items-end justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <GenerateButton />
-                  <StopButton />
-                </div>
-              </div>
-            </div>
+    <div className="sticky bottom-0 z-10 border-t border-slate-200/70 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70">
+      <div className="mx-auto w-full max-w-4xl px-3 py-3 sm:px-4">
+        <div
+          className="
+            flex items-end gap-2
+            rounded-2xl border border-slate-200 bg-white
+            px-3 py-2
+            shadow-sm
+            focus-within:ring-2 focus-within:ring-sky-200 focus-within:ring-offset-2 focus-within:ring-offset-white
+          "
+        >
+          <Textarea
+            placeholder="Сообщение..."
+            className="
+              flex-1
+              min-h-[44px] max-h-[180px]
+              resize-none
+              border-0 bg-transparent p-0
+              text-[15px] leading-6 text-slate-900
+              placeholder:text-slate-400
+              outline-none
+            "
+          />
+
+          <div className="flex items-center gap-2 pb-0.5">
+            <GenerateButton />
+            <StopButton />
           </div>
         </div>
       </div>
