@@ -1,8 +1,7 @@
-import ChatPage from '@/features/chat/ui/ChatPage'
+import { ChatPage } from '@/features/chat'
 
 function App() {
   return <ChatPage />
 }
 
 export default App
-
