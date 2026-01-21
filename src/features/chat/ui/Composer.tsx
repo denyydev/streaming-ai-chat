@@ -11,7 +11,7 @@ function Composer() {
             <div className="flex gap-3">
               <div className="flex-1">
                 <Textarea
-                  placeholder="Type a message..."
+                  placeholder="Сообщение..."
                   className="min-h-[96px] resize-none"
                 />
               </div>

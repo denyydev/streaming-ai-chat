@@ -1,59 +1,63 @@
 const loremChunks = [
-  'Streaming interfaces should feel responsive even under heavy load. ',
-  'A good chat layout keeps messages readable over long sessions. ',
-  'Developers often mix prose with inline code to explain ideas clearly. ',
-  'The transport layer can stream data in small pieces without blocking the UI. ',
-  'Batching updates lets React commit changes without locking up the main thread. ',
-]
+  "Если интерфейс лагает, пользователь начинает сомневаться в своей жизни. ",
+  "Хороший чат не дергается, даже когда в него летит тонна текста. ",
+  "Стриминг — это когда ответ уже идет, а сервер еще думает, что сказать дальше. ",
+  "Главное правило UI: если ничего не происходит — значит что-то сломалось. ",
+  "Разработчики любят код, но еще больше они любят, когда код не мешает читать текст. ",
+  "Когда автоскролл работает правильно, ты этого даже не замечаешь. ",
+  "Если автоскролл работает неправильно — ты замечаешь это сразу. ",
+  "Рендер без фризов — это не фича, это уважение к пользователю. ",
+  "Виртуализация списка — момент, когда фронтендер начинает чувствовать себя взрослым. ",
+  "Если DOM весит пять мегабайт, браузер имеет право обидеться. ",
+];
 
 const codeChunks = [
-  'const buffer: string[] = [];\n',
-  'function appendChunk(chunk: string) {\n',
-  '  buffer.push(chunk)\n',
-  '}\n',
-  'export function flush() {\n',
-  '  return buffer.join(\"\")\n',
-  '}\n',
-]
+  "const buffer: string[] = [];\n",
+  "function appendChunk(chunk: string) {\n",
+  "  buffer.push(chunk)\n",
+  "}\n",
+  "export function flush() {\n",
+  '  return buffer.join("")\n',
+  "}\n",
+];
 
 type TextGeneratorState = {
-  wordCount: number
-  targetWords: number
-  index: number
-  mode: 'text' | 'code'
-}
+  wordCount: number;
+  targetWords: number;
+  index: number;
+  mode: "text" | "code";
+};
 
 export function createTextGenerator(targetWords = 10000) {
   const state: TextGeneratorState = {
     wordCount: 0,
     targetWords,
     index: 0,
-    mode: 'text',
-  }
+    mode: "text",
+  };
 
   function takeChunk(): string | null {
     if (state.wordCount >= state.targetWords) {
-      return null
+      return null;
     }
 
-    const useCode = state.mode === 'code'
-    const pool = useCode ? codeChunks : loremChunks
+    const useCode = state.mode === "code";
+    const pool = useCode ? codeChunks : loremChunks;
 
-    const piece = pool[state.index % pool.length]
-    state.index += 1
+    const piece = pool[state.index % pool.length];
+    state.index += 1;
 
-    const words = piece.split(/\s+/).filter(Boolean).length
-    state.wordCount += words
+    const words = piece.split(/\s+/).filter(Boolean).length;
+    state.wordCount += words;
 
     if (state.index % 7 === 0) {
-      state.mode = state.mode === 'text' ? 'code' : 'text'
+      state.mode = state.mode === "text" ? "code" : "text";
     }
 
-    return piece
+    return piece;
   }
 
   return {
     nextChunk: takeChunk,
-  }
+  };
 }
-

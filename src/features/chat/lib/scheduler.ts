@@ -19,7 +19,7 @@ function resetScheduling() {
   commitDurations.length = 0
 }
 
-function clearTimers() {
+export function stopStreamingGeneration() {
   if (chunkTimer) {
     clearInterval(chunkTimer)
     chunkTimer = null
@@ -47,13 +47,14 @@ function scheduleCommitTimer(run: () => void) {
 }
 
 export function startStreamingGeneration(options?: GenerationOptions) {
+  stopStreamingGeneration()
+
   const initialState = useChatStore.getState()
 
   if (initialState.isGenerating) {
     return
   }
 
-  resetScheduling()
   initialState.startGenerating()
 
   const afterStart = useChatStore.getState()
@@ -69,11 +70,23 @@ export function startStreamingGeneration(options?: GenerationOptions) {
     targetWords: options?.targetWords ?? 4000,
   })
 
+  const firstState = useChatStore.getState()
+  const firstChunk = generator.nextChunk()
+
+  if (!firstChunk) {
+    firstState.finalizeStream('done')
+    stopStreamingGeneration()
+    return
+  }
+
+  firstState.appendStreamChunk(firstChunk)
+  firstState.commitStream()
+
   chunkTimer = setInterval(() => {
     const state = useChatStore.getState()
 
     if (!state.isGenerating || !state.generationId || state.generationId !== activeGenerationId) {
-      clearTimers()
+      stopStreamingGeneration()
       return
     }
 
@@ -82,7 +95,7 @@ export function startStreamingGeneration(options?: GenerationOptions) {
 
       if (!chunk) {
         state.finalizeStream('done')
-        clearTimers()
+        stopStreamingGeneration()
         return
       }
 
@@ -94,7 +107,7 @@ export function startStreamingGeneration(options?: GenerationOptions) {
     const state = useChatStore.getState()
 
     if (!state.isGenerating || !state.generationId || state.generationId !== activeGenerationId) {
-      clearTimers()
+      stopStreamingGeneration()
       return
     }
 

@@ -1,25 +1,24 @@
-import { Button } from '@/shared/ui'
-import { useChatStore } from '../../model/store'
-import { selectIsGenerating } from '../../model/selectors'
-import { startStreamingGeneration } from '../../lib/scheduler'
+import { Button } from "@/shared/ui";
+import { startStreamingGeneration } from "../../lib/scheduler";
+import { selectIsGenerating } from "../../model/selectors";
+import { useChatStore } from "../../model/store";
 
 function GenerateButton() {
-  const isGenerating = useChatStore(selectIsGenerating)
+  const isGenerating = useChatStore(selectIsGenerating);
 
   function handleClick() {
     if (isGenerating) {
-      return
+      return;
     }
 
-    startStreamingGeneration({ targetWords: 10000 })
+    startStreamingGeneration({ targetWords: 10000 });
   }
 
   return (
     <Button onClick={handleClick} disabled={isGenerating}>
-      Generate
+      Генератор
     </Button>
-  )
+  );
 }
 
-export default GenerateButton
-
+export default GenerateButton;

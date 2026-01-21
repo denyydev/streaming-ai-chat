@@ -1,11 +1,12 @@
 import { Button } from "@/shared/ui";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent, type WheelEvent } from "react";
 import {
   selectCommitVersion,
   selectIsGenerating,
   selectMessageById,
   selectMessageIds,
+  selectScrollToBottomVersion,
 } from "../model/selectors";
 import { useChatStore } from "../model/store";
 import type { MessageId } from "../model/types";
@@ -31,7 +32,13 @@ function ChatList() {
   const messageIds = useChatStore(selectMessageIds);
   const commitVersion = useChatStore(selectCommitVersion);
   const isGenerating = useChatStore(selectIsGenerating);
+  const scrollToBottomVersion = useChatStore(selectScrollToBottomVersion);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const autoScrollLockRef = useRef(false);
+  const fastStartRef = useRef(0);
+  const prevIsGeneratingRef = useRef(false);
+  const measureRafIdRef = useRef<number | null>(null);
+  const measureAtRef = useRef(0);
   const [isAutoScrollEnabled, setIsAutoScrollEnabled] = useState(true);
   const [isAtBottom, setIsAtBottom] = useState(true);
 
@@ -52,8 +59,47 @@ function ChatList() {
     });
   }
 
+  function lightScrollToBottom() {
+    const container = containerRef.current;
+    if (container) {
+      container.scrollTo({ top: container.scrollHeight, behavior: 'auto' });
+    }
+  }
+
+  function scheduleMeasure() {
+    if (measureRafIdRef.current !== null) {
+      return;
+    }
+
+    const now = performance.now();
+    if (now - measureAtRef.current < 250) {
+      return;
+    }
+
+    measureRafIdRef.current = requestAnimationFrame(() => {
+      virtualizer.measure();
+      measureRafIdRef.current = null;
+      measureAtRef.current = performance.now();
+    });
+  }
+
   useEffect(() => {
-    if (!isGenerating || !isAutoScrollEnabled) {
+    if (prevIsGeneratingRef.current === false && isGenerating === true) {
+      fastStartRef.current = 6;
+    }
+    prevIsGeneratingRef.current = isGenerating;
+  }, [isGenerating]);
+
+  useEffect(() => {
+    autoScrollLockRef.current = false;
+    setIsAutoScrollEnabled(true);
+    setIsAtBottom(true);
+    fastStartRef.current = 6;
+    lightScrollToBottom();
+  }, [scrollToBottomVersion]);
+
+  useEffect(() => {
+    if (!isGenerating || !isAutoScrollEnabled || autoScrollLockRef.current) {
       return;
     }
 
@@ -61,7 +107,13 @@ function ChatList() {
       return;
     }
 
-    virtualizer.measure();
+    if (fastStartRef.current > 0) {
+      fastStartRef.current -= 1;
+      lightScrollToBottom();
+      return;
+    }
+
+    scheduleMeasure();
     scrollToBottom();
   }, [
     commitVersion,
@@ -84,15 +136,41 @@ function ChatList() {
     const atBottom = distanceToBottom <= AUTO_SCROLL_THRESHOLD;
     setIsAtBottom(atBottom);
 
-    if (!atBottom) {
-      setIsAutoScrollEnabled(false);
-    } else {
+    if (atBottom && !autoScrollLockRef.current) {
       setIsAutoScrollEnabled(true);
     }
   }
 
+  function handleWheel(event: WheelEvent<HTMLDivElement>) {
+    if (!isGenerating || !isAutoScrollEnabled) {
+      return;
+    }
+
+    if (event.deltaY < 0) {
+      autoScrollLockRef.current = true;
+      setIsAutoScrollEnabled(false);
+      setIsAtBottom(false);
+    }
+  }
+
+  function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (!isGenerating || !isAutoScrollEnabled) {
+      return;
+    }
+
+    const { key, shiftKey } = event;
+
+    if (key === "PageUp" || key === "ArrowUp" || (key === " " && shiftKey)) {
+      autoScrollLockRef.current = true;
+      setIsAutoScrollEnabled(false);
+      setIsAtBottom(false);
+    }
+  }
+
   function handleJumpToBottom() {
+    autoScrollLockRef.current = false;
     setIsAutoScrollEnabled(true);
+    setIsAtBottom(true);
     scrollToBottom();
   }
 
@@ -102,6 +180,9 @@ function ChatList() {
         ref={containerRef}
         className="h-full overflow-y-auto px-4 pt-4 pb-28"
         onScroll={handleScroll}
+        onWheel={handleWheel}
+        onKeyDown={handleKeyDown}
+        tabIndex={0}
       >
         <div className="mx-auto w-full max-w-4xl">
           <div
@@ -140,7 +221,7 @@ function ChatList() {
       </div>
 
       <div className="pointer-events-none absolute inset-x-0 bottom-24 z-20 flex items-center justify-end px-4">
-        {!isAtBottom && (
+        {(!isAtBottom || autoScrollLockRef.current) && (
           <div className="pointer-events-auto">
             <Button
               className="h-9 rounded-full border border-slate-200 bg-white px-3 text-sm text-slate-700 shadow-sm hover:bg-slate-50 active:bg-slate-100"

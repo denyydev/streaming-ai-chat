@@ -46,6 +46,7 @@ export type ChatState = {
   isGenerating: boolean
   streamBuffer: string[]
   commitVersion: number
+  scrollToBottomVersion: number
   addMessage: (input: { role: ChatRole; text: string }) => MessageId
   seedMockHistory: () => void
   startGenerating: () => void
@@ -53,5 +54,6 @@ export type ChatState = {
   appendStreamChunk: (chunk: string) => void
   commitStream: () => void
   finalizeStream: (status: MessageStatus) => void
+  requestScrollToBottom: () => void
 }
 

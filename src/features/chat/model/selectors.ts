@@ -24,3 +24,7 @@ export function selectCommitVersion(state: ChatState): number {
   return state.commitVersion
 }
 
+export function selectScrollToBottomVersion(state: ChatState): number {
+  return state.scrollToBottomVersion
+}
+
