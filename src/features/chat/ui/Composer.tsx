@@ -1,12 +1,8 @@
 import { Textarea } from "@/shared/ui";
-import { selectIsGenerating } from "../model/selectors";
-import { useChatStore } from "../model/store";
 import GenerateButton from "./controls/GenerateButton";
 import StopButton from "./controls/StopButton";
 
 function Composer() {
-  const isGenerating = useChatStore(selectIsGenerating);
-
   return (
     <div className="sticky bottom-0 z-10 border-t border-slate-200/70 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70">
       <div className="mx-auto w-full max-w-4xl px-3 py-3 sm:px-4">
