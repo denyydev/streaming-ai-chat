@@ -9,7 +9,6 @@ import {
 } from "../model/selectors";
 import { useChatStore } from "../model/store";
 import type { MessageId } from "../model/types";
-import AutoScrollToggle from "./controls/AutoScrollToggle";
 import MessageItem from "./MessageItem";
 
 type ChatListItemProps = {
@@ -85,21 +84,10 @@ function ChatList() {
     const atBottom = distanceToBottom <= AUTO_SCROLL_THRESHOLD;
     setIsAtBottom(atBottom);
 
-    if (!atBottom && isAutoScrollEnabled) {
+    if (!atBottom) {
       setIsAutoScrollEnabled(false);
-    }
-
-    if (atBottom && !isAutoScrollEnabled) {
+    } else {
       setIsAutoScrollEnabled(true);
-    }
-  }
-
-  function handleToggleAutoScroll() {
-    const next = !isAutoScrollEnabled;
-    setIsAutoScrollEnabled(next);
-
-    if (next) {
-      scrollToBottom();
     }
   }
 
@@ -151,16 +139,7 @@ function ChatList() {
         </div>
       </div>
 
-      <div className="pointer-events-none absolute inset-x-0 bottom-24 z-20 flex items-center justify-between px-4">
-        <div className="pointer-events-auto">
-          <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2 py-1 shadow-sm">
-            <AutoScrollToggle
-              enabled={isAutoScrollEnabled}
-              onToggle={handleToggleAutoScroll}
-            />
-          </div>
-        </div>
-
+      <div className="pointer-events-none absolute inset-x-0 bottom-24 z-20 flex items-center justify-end px-4">
         {!isAtBottom && (
           <div className="pointer-events-auto">
             <Button

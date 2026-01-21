@@ -11,7 +11,7 @@ function GenerateButton() {
       return
     }
 
-    startStreamingGeneration()
+    startStreamingGeneration({ targetWords: 10000 })
   }
 
   return (
