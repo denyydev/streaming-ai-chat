@@ -1,11 +1,12 @@
-type MessageRole = 'user' | 'assistant'
+import type { ChatRole, MessageId } from '../model/types'
+import MarkdownMessage from './MarkdownMessage'
 
 type MessageItemProps = {
-  role: MessageRole
-  text: string
+  role: ChatRole
+  messageId: MessageId
 }
 
-function MessageItem({ role, text }: MessageItemProps) {
+function MessageItem({ role, messageId }: MessageItemProps) {
   const isUser = role === 'user'
 
   return (
@@ -17,11 +18,10 @@ function MessageItem({ role, text }: MessageItemProps) {
             : 'bg-slate-800 text-slate-100'
         }`}
       >
-        {text}
+        <MarkdownMessage messageId={messageId} />
       </div>
     </div>
   )
 }
 
 export default MessageItem
-

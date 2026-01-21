@@ -6,6 +6,29 @@ export type MessageId = string
 
 export type GenerationId = string
 
+export type MarkdownTextNode = {
+  type: 'text'
+  value: string
+}
+
+export type MarkdownBoldNode = {
+  type: 'bold'
+  children: MarkdownTextNode[]
+}
+
+export type MarkdownCodeBlockNode = {
+  type: 'codeBlock'
+  lang: string | null
+  code: string
+}
+
+export type MarkdownParagraphNode = {
+  type: 'paragraph'
+  children: (MarkdownTextNode | MarkdownBoldNode)[]
+}
+
+export type MarkdownNode = MarkdownParagraphNode | MarkdownCodeBlockNode
+
 export type Message = {
   id: MessageId
   role: ChatRole

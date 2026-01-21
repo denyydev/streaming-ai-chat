@@ -23,7 +23,7 @@ function ChatListItem({ id }: ChatListItemProps) {
         return null
     }
 
-    return <MessageItem role={message.role} text={message.text} />
+  return <MessageItem role={message.role} messageId={id} />
 }
 
 const AUTO_SCROLL_THRESHOLD = 120
