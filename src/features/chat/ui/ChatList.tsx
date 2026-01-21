@@ -1,38 +1,32 @@
+import { useChatStore } from '@/features/chat'
+import { selectMessageById, selectMessageIds } from '../model/selectors'
+import type { MessageId } from '../model/types'
 import MessageItem from './MessageItem'
 
-const items = [
-  { role: 'user' as const, text: 'Hi, I want to build a streaming AI chat.' },
-  {
-    role: 'assistant' as const,
-    text: 'We can start with a simple feature-based architecture for the UI.',
-  },
-  {
-    role: 'user' as const,
-    text: 'I also need good support for long responses with markdown blocks.',
-  },
-  {
-    role: 'assistant' as const,
-    text: 'A virtualized list and streaming renderer will help keep it smooth.',
-  },
-  {
-    role: 'assistant' as const,
-    text: 'For now this is only a static placeholder for future messages.',
-  },
-  {
-    role: 'user' as const,
-    text: 'Looks good. I like that the layout already feels like a real app.',
-  },
-]
+type ChatListItemProps = {
+    id: MessageId
+}
+
+function ChatListItem({ id }: ChatListItemProps) {
+    const message = useChatStore((state) => selectMessageById(state, id))
+
+    if (!message) {
+        return null
+    }
+
+    return <MessageItem role={message.role} text={message.text} />
+}
 
 function ChatList() {
-  return (
-    <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
-      {items.map((item, index) => (
-        <MessageItem key={index} role={item.role} text={item.text} />
-      ))}
-    </div>
-  )
+    const messageIds = useChatStore(selectMessageIds)
+
+    return (
+        <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
+            {messageIds.map((id) => (
+                <ChatListItem key={id} id={id} />
+            ))}
+        </div>
+    )
 }
 
 export default ChatList
-
