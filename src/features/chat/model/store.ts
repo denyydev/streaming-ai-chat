@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import type { ChatRole, ChatState, Message, MessageStatus, MessageId } from './types'
 
+const MAX_STREAM_BUFFER_CHUNKS = 300
+
 function createId() {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID()
@@ -105,6 +107,43 @@ export const useChatStore = create<ChatState>((set, get) => ({
       get().addMessage(item)
     })
   },
+  seedDemoHistory: () => {
+    const count = get().messageIds.length
+    if (count > 0) {
+      return
+    }
+
+    const baseTexts: string[] = [
+      'Short message for layout checks. ',
+      'This is a slightly longer line meant to show how wrapping behaves in the chat window. ',
+      'Sometimes you want to highlight **important** pieces of text while keeping everything readable. ',
+      'Code samples can appear inline like `const x = 1` but also inside dedicated blocks. ',
+    ]
+
+    const longTail =
+      'This paragraph is deliberately long so that the virtualized list has to deal with variable height items over time. '
+
+    const total = 120
+
+    for (let index = 0; index < total; index += 1) {
+      const role: ChatRole = index % 2 === 0 ? 'user' : 'assistant'
+      const base = baseTexts[index % baseTexts.length]
+
+      let text = base
+
+      if (index % 10 === 0) {
+        text += longTail.repeat(4)
+      } else if (index % 5 === 0) {
+        text += longTail.repeat(2)
+      }
+
+      if (index % 8 === 0) {
+        text += '\n```ts\nconst value = Math.random()\nconsole.log(value)\n```\n'
+      }
+
+      get().addMessage({ role, text })
+    }
+  },
   reset: () => {
     set({
       messageIds: [],
@@ -157,6 +196,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
     set((state) => ({
       streamBuffer: [...state.streamBuffer, chunk],
     }))
+
+    const size = get().streamBuffer.length
+    if (size > MAX_STREAM_BUFFER_CHUNKS) {
+      get().commitStream()
+    }
   },
   commitStream: () => {
     const { streamingMessageId } = get()

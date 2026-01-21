@@ -5,6 +5,20 @@ let chunkTimer: ReturnType<typeof setInterval> | null = null
 let commitTimer: ReturnType<typeof setInterval> | null = null
 let activeGenerationId: string | null = null
 
+const chunkIntervalMs = 15
+let commitIntervalMs = 80
+const minCommitIntervalMs = 60
+const maxCommitIntervalMs = 180
+let chunksPerTick = 1
+const commitDurations: number[] = []
+const maxTrackedCommits = 10
+
+function resetScheduling() {
+  commitIntervalMs = 80
+  chunksPerTick = 1
+  commitDurations.length = 0
+}
+
 function clearTimers() {
   if (chunkTimer) {
     clearInterval(chunkTimer)
@@ -17,15 +31,29 @@ function clearTimers() {
   }
 
   activeGenerationId = null
+  resetScheduling()
 }
 
-export function startStreamingGeneration() {
+type GenerationOptions = {
+  targetWords?: number
+}
+
+function scheduleCommitTimer(run: () => void) {
+  if (commitTimer) {
+    clearInterval(commitTimer)
+  }
+
+  commitTimer = setInterval(run, commitIntervalMs)
+}
+
+export function startStreamingGeneration(options?: GenerationOptions) {
   const initialState = useChatStore.getState()
 
   if (initialState.isGenerating) {
     return
   }
 
+  resetScheduling()
   initialState.startGenerating()
 
   const afterStart = useChatStore.getState()
@@ -37,7 +65,9 @@ export function startStreamingGeneration() {
 
   activeGenerationId = generationId
 
-  const generator = createTextGenerator()
+  const generator = createTextGenerator({
+    targetWords: options?.targetWords ?? 4000,
+  })
 
   chunkTimer = setInterval(() => {
     const state = useChatStore.getState()
@@ -47,18 +77,20 @@ export function startStreamingGeneration() {
       return
     }
 
-    const chunk = generator.nextChunk()
+    for (let index = 0; index < chunksPerTick; index += 1) {
+      const chunk = generator.nextChunk()
 
-    if (!chunk) {
-      state.finalizeStream('done')
-      clearTimers()
-      return
+      if (!chunk) {
+        state.finalizeStream('done')
+        clearTimers()
+        return
+      }
+
+      state.appendStreamChunk(chunk)
     }
+  }, chunkIntervalMs)
 
-    state.appendStreamChunk(chunk)
-  }, 15)
-
-  commitTimer = setInterval(() => {
+  const runCommit = () => {
     const state = useChatStore.getState()
 
     if (!state.isGenerating || !state.generationId || state.generationId !== activeGenerationId) {
@@ -66,7 +98,35 @@ export function startStreamingGeneration() {
       return
     }
 
+    const startedAt = performance.now()
     state.commitStream()
-  }, 80)
+    const duration = performance.now() - startedAt
+
+    commitDurations.push(duration)
+    if (commitDurations.length > maxTrackedCommits) {
+      commitDurations.shift()
+    }
+
+    const sum = commitDurations.reduce((value, item) => value + item, 0)
+    const average = sum / commitDurations.length
+
+    let updated = false
+
+    if (average > 12 && commitIntervalMs < maxCommitIntervalMs) {
+      commitIntervalMs = Math.min(maxCommitIntervalMs, commitIntervalMs + 20)
+      updated = true
+    } else if (average < 6 && commitIntervalMs > minCommitIntervalMs) {
+      commitIntervalMs = Math.max(minCommitIntervalMs, commitIntervalMs - 10)
+      updated = true
+    }
+
+    if (updated) {
+      const ratio = Math.max(1, Math.round(commitIntervalMs / chunkIntervalMs))
+      chunksPerTick = Math.min(4, ratio)
+      scheduleCommitTimer(runCommit)
+    }
+  }
+
+  scheduleCommitTimer(runCommit)
 }
 

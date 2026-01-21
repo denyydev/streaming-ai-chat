@@ -48,6 +48,7 @@ export type ChatState = {
   commitVersion: number
   addMessage: (input: { role: ChatRole; text: string }) => MessageId
   seedMockHistory: () => void
+  seedDemoHistory: () => void
   reset: () => void
   startGenerating: () => void
   stopGenerating: () => void
