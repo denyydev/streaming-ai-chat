@@ -66,7 +66,7 @@ export function startStreamingGeneration(options?: GenerationOptions) {
 
   activeGenerationId = generationId;
 
-  const generator = createTextGenerator(options?.targetWords ?? 4000);
+  const generator = createTextGenerator(options?.targetWords ?? 10000);
 
   const firstState = useChatStore.getState();
   const firstChunk = generator.nextChunk();

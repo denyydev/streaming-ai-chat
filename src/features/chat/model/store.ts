@@ -184,17 +184,29 @@ export const useChatStore = create<ChatState>((set, get) => ({
           }))
         : state.messagesById;
 
+      const finalMessagesById = updateMessage(
+        nextMessagesById,
+        streamingMessageId,
+        (message) => ({
+          ...message,
+          status,
+          updatedAt: Date.now(),
+        }),
+      );
+
+      const finalizedMessage = finalMessagesById[streamingMessageId];
+
+      if (finalizedMessage && finalizedMessage.role === 'assistant') {
+        const text = finalizedMessage.text.trim()
+        const wordCount = text ? text.split(/\s+/).filter(Boolean).length : 0
+        if (import.meta.env.DEV) {
+          console.log(`Generated words: ${wordCount}`)
+        }
+      }
+
       return {
         ...state,
-        messagesById: updateMessage(
-          nextMessagesById,
-          streamingMessageId,
-          (message) => ({
-            ...message,
-            status,
-            updatedAt: Date.now(),
-          }),
-        ),
+        messagesById: finalMessagesById,
         streamingMessageId: null,
         generationId: null,
         isGenerating: false,

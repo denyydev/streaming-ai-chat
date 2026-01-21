@@ -47,8 +47,17 @@ export function createTextGenerator(targetWords = 10000) {
     const piece = pool[state.index % pool.length];
     state.index += 1;
 
-    const words = piece.split(/\s+/).filter(Boolean).length;
-    state.wordCount += words;
+    if (!piece || piece.trim().length === 0) {
+      return takeChunk();
+    }
+
+    if (useCode) {
+      const tokens = piece.match(/[A-Za-zА-Яа-я0-9_]+/g) ?? [];
+      state.wordCount += tokens.length;
+    } else {
+      const words = piece.split(/\s+/).filter(Boolean).length;
+      state.wordCount += words;
+    }
 
     if (state.index % 7 === 0) {
       state.mode = state.mode === "text" ? "code" : "text";
