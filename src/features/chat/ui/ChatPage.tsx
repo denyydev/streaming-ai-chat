@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useChatStore } from '@/features/chat'
+import { useChatStore } from '../model/store'
 import { selectMessageCount } from '../model/selectors'
 import ChatList from './ChatList'
 import Composer from './Composer'

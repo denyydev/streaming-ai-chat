@@ -12,3 +12,11 @@ export function selectMessageCount(state: ChatState): number {
   return state.messageIds.length
 }
 
+export function selectIsGenerating(state: ChatState): boolean {
+  return state.isGenerating
+}
+
+export function selectStreamingMessageId(state: ChatState): MessageId | null {
+  return state.streamingMessageId
+}
+

@@ -1,4 +1,4 @@
-import { useChatStore } from '@/features/chat'
+import { useChatStore } from '../model/store'
 import { selectMessageById, selectMessageIds } from '../model/selectors'
 import type { MessageId } from '../model/types'
 import MessageItem from './MessageItem'

@@ -1,4 +1,4 @@
-import { Button, Textarea } from '@/shared/ui'
+import { Textarea } from '@/shared/ui'
 import AutoScrollToggle from './controls/AutoScrollToggle'
 import GenerateButton from './controls/GenerateButton'
 import StopButton from './controls/StopButton'
