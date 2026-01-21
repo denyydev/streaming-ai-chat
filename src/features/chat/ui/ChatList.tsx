@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useVirtualizer } from '@tanstack/react-virtual'
 import { Button } from '@/shared/ui'
 import { useChatStore } from '../model/store'
 import {
@@ -35,15 +36,20 @@ function ChatList() {
     const [isAutoScrollEnabled, setIsAutoScrollEnabled] = useState(true)
     const [isAtBottom, setIsAtBottom] = useState(true)
 
+  const virtualizer = useVirtualizer({
+    count: messageIds.length,
+    getScrollElement: () => containerRef.current,
+    estimateSize: () => 80,
+    overscan: 8,
+  })
+
     function scrollToBottom() {
-        const container = containerRef.current
-
-        if (!container) {
-            return
-        }
-
         requestAnimationFrame(() => {
-            container.scrollTop = container.scrollHeight
+      if (!messageIds.length) {
+        return
+      }
+
+      virtualizer.scrollToIndex(messageIds.length - 1, { align: 'end' })
         })
     }
 
@@ -56,8 +62,9 @@ function ChatList() {
             return
         }
 
+    virtualizer.measure()
         scrollToBottom()
-    }, [commitVersion, isGenerating, isAutoScrollEnabled, messageIds.length])
+  }, [commitVersion, isGenerating, isAutoScrollEnabled, messageIds.length, virtualizer])
 
     function handleScroll() {
         const container = containerRef.current
@@ -99,12 +106,40 @@ function ChatList() {
         <div className="relative flex-1">
             <div
                 ref={containerRef}
-                className="flex h-full flex-col space-y-3 overflow-y-auto px-4 py-4"
+        className="h-full overflow-y-auto px-4 py-4"
                 onScroll={handleScroll}
             >
-                {messageIds.map((id) => (
-                    <ChatListItem key={id} id={id} />
-                ))}
+        <div
+          style={{
+            height: virtualizer.getTotalSize(),
+            width: '100%',
+            position: 'relative',
+          }}
+        >
+          {virtualizer.getVirtualItems().map((item) => {
+            const id = messageIds[item.index]
+
+            if (!id) {
+              return null
+            }
+
+            return (
+              <div
+                key={id}
+                ref={virtualizer.measureElement}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  transform: `translateY(${item.start}px)`,
+                }}
+              >
+                <ChatListItem id={id} />
+              </div>
+            )
+          })}
+        </div>
             </div>
             <div className="pointer-events-none absolute inset-x-0 bottom-3 flex items-end justify-between px-4">
                 <div className="pointer-events-auto">
