@@ -1,5 +1,4 @@
 import { Textarea } from '@/shared/ui'
-import AutoScrollToggle from './controls/AutoScrollToggle'
 import GenerateButton from './controls/GenerateButton'
 import StopButton from './controls/StopButton'
 
@@ -11,9 +10,6 @@ function Composer() {
           <Textarea placeholder="Type a message..." />
         </div>
         <div className="flex flex-col items-end gap-2">
-          <div className="flex items-center gap-2">
-            <AutoScrollToggle />
-          </div>
           <div className="flex items-center gap-2">
             <GenerateButton />
             <StopButton />

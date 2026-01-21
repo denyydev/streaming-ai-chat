@@ -20,3 +20,7 @@ export function selectStreamingMessageId(state: ChatState): MessageId | null {
   return state.streamingMessageId
 }
 
+export function selectCommitVersion(state: ChatState): number {
+  return state.commitVersion
+}
+

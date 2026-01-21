@@ -22,6 +22,7 @@ export type ChatState = {
   generationId: GenerationId | null
   isGenerating: boolean
   streamBuffer: string[]
+  commitVersion: number
   addMessage: (input: { role: ChatRole; text: string }) => MessageId
   seedMockHistory: () => void
   reset: () => void

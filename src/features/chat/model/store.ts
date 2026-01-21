@@ -81,6 +81,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   generationId: null,
   isGenerating: false,
   streamBuffer: [],
+  commitVersion: 0,
   addMessage: (input) => {
     const message = createMessage(input)
 
@@ -112,6 +113,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       generationId: null,
       isGenerating: false,
       streamBuffer: [],
+      commitVersion: 0,
     })
   },
   startGenerating: () => {
@@ -178,6 +180,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
           updatedAt: Date.now(),
         })),
         streamBuffer: [],
+        commitVersion: state.commitVersion + 1,
       }
     })
   },
@@ -210,6 +213,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         generationId: null,
         isGenerating: false,
         streamBuffer: [],
+        commitVersion: state.commitVersion + 1,
       }
     })
   },
