@@ -100,6 +100,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
       status: "streaming",
     });
 
+    const generationId = createId();
+
     set((state) => ({
       messageIds: [...state.messageIds, message.id],
       messagesById: {
@@ -107,7 +109,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         [message.id]: message,
       },
       streamingMessageId: message.id,
-      generationId: createId(),
+      generationId,
       isGenerating: true,
       streamBuffer: [],
       scrollToBottomVersion: state.scrollToBottomVersion + 1,
@@ -193,16 +195,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
           updatedAt: Date.now(),
         }),
       );
-
-      const finalizedMessage = finalMessagesById[streamingMessageId];
-
-      if (finalizedMessage && finalizedMessage.role === 'assistant') {
-        const text = finalizedMessage.text.trim()
-        const wordCount = text ? text.split(/\s+/).filter(Boolean).length : 0
-        if (import.meta.env.DEV) {
-          console.log(`Generated words: ${wordCount}`)
-        }
-      }
 
       return {
         ...state,

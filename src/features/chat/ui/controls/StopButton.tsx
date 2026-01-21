@@ -5,12 +5,11 @@ import { useChatStore } from "../../model/store";
 
 function StopButton() {
   const isGenerating = useChatStore(selectIsGenerating);
-  const stopGenerating = useChatStore((state) => state.stopGenerating);
 
   function handleClick() {
     if (!isGenerating) return;
 
-    stopGenerating();
+    // stopStreamingGeneration() already calls finalizeStream("stopped")
     stopStreamingGeneration();
   }
 
@@ -24,7 +23,7 @@ function StopButton() {
         focus-visible:ring-rose-200
       "
     >
-      Стоп
+      Остановить
     </Button>
   );
 }

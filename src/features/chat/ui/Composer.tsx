@@ -1,12 +1,11 @@
 import { Textarea } from "@/shared/ui";
+import { selectIsGenerating } from "../model/selectors";
 import { useChatStore } from "../model/store";
-import { selectLastAssistantWordCount, selectIsGenerating } from "../model/selectors";
 import GenerateButton from "./controls/GenerateButton";
 import StopButton from "./controls/StopButton";
 
 function Composer() {
   const isGenerating = useChatStore(selectIsGenerating);
-  const wordCount = useChatStore(selectLastAssistantWordCount);
 
   return (
     <div className="sticky bottom-0 z-10 border-t border-slate-200/70 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70">
@@ -34,11 +33,6 @@ function Composer() {
           />
 
           <div className="flex items-center gap-2 pb-0.5">
-            {import.meta.env.DEV && isGenerating && wordCount > 0 && (
-              <span className="text-xs text-slate-400 tabular-nums">
-                {wordCount.toLocaleString()}
-              </span>
-            )}
             <GenerateButton />
             <StopButton />
           </div>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { requestMarkdownParse } from "../lib/worker";
-import { selectIsGenerating, selectMessageById } from "../model/selectors";
+import { selectMessageById } from "../model/selectors";
 import { useChatStore } from "../model/store";
 import type {
   MarkdownCodeBlockNode,
@@ -62,7 +62,6 @@ function renderNodes(nodes: MarkdownNode[]) {
 
 function MarkdownMessage({ messageId }: MarkdownMessageProps) {
   const message = useChatStore((state) => selectMessageById(state, messageId));
-  const isGenerating = useChatStore(selectIsGenerating);
   const [nodes, setNodes] = useState<MarkdownNode[] | null>(null);
 
   useEffect(() => {
@@ -71,7 +70,7 @@ function MarkdownMessage({ messageId }: MarkdownMessageProps) {
       return;
     }
 
-    if (message.status === "streaming" || isGenerating) {
+    if (message.status === "streaming") {
       setNodes(null);
       return;
     }
@@ -92,11 +91,11 @@ function MarkdownMessage({ messageId }: MarkdownMessageProps) {
     return () => {
       cancelled = true;
     };
-  }, [message?.id, message?.updatedAt, message?.status, isGenerating]);
+  }, [message?.id, message?.updatedAt, message?.status, message?.text]);
 
   if (!message) return null;
 
-  if (!nodes) {
+  if (message.status === "streaming" || !nodes) {
     return (
       <div className="whitespace-pre-wrap break-words">{message.text}</div>
     );

@@ -16,7 +16,7 @@ function GenerateButton() {
 
   return (
     <Button onClick={handleClick} disabled={isGenerating}>
-      Генератор
+      Генерировать
     </Button>
   );
 }

@@ -32,6 +32,11 @@ export function stopStreamingGeneration() {
 
   activeGenerationId = null;
   resetScheduling();
+
+  const state = useChatStore.getState();
+  if (state.isGenerating) {
+    state.finalizeStream("stopped");
+  }
 }
 
 type GenerationOptions = {
@@ -107,6 +112,22 @@ export function startStreamingGeneration(options?: GenerationOptions) {
 
   const runCommit = () => {
     const state = useChatStore.getState();
+    const id = state.streamingMessageId!;
+    
+    if (!id) {
+      stopStreamingGeneration();
+      return;
+    }
+
+    const bufferSize = state.streamBuffer.length;
+
+    if (bufferSize === 0) {
+      return;
+    }
+
+    const startedAt = performance.now();
+    state.commitStream();
+    const duration = performance.now() - startedAt;
 
     if (
       !state.isGenerating ||
@@ -116,10 +137,6 @@ export function startStreamingGeneration(options?: GenerationOptions) {
       stopStreamingGeneration();
       return;
     }
-
-    const startedAt = performance.now();
-    state.commitStream();
-    const duration = performance.now() - startedAt;
 
     commitDurations.push(duration);
     if (commitDurations.length > maxTrackedCommits) {
