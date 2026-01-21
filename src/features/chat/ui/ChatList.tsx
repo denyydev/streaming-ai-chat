@@ -1,13 +1,6 @@
 import { Button } from "@/shared/ui";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type KeyboardEvent,
-  type WheelEvent,
-} from "react";
+import { useEffect, useMemo, useRef, useState, type WheelEvent } from "react";
 import {
   selectCommitVersion,
   selectIsGenerating,
@@ -39,6 +32,7 @@ function ChatList() {
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const tailRef = useRef<HTMLDivElement | null>(null);
+
   const autoScrollLockRef = useRef(false);
   const isProgrammaticScrollRef = useRef(false);
   const rafRef = useRef<number | null>(null);
@@ -49,11 +43,12 @@ function ChatList() {
   const [isAtBottom, setIsAtBottom] = useState(true);
 
   const { historyIds, tailId } = useMemo(() => {
-    if (messageIds.length === 0)
+    if (messageIds.length === 0) {
       return {
         historyIds: [] as MessageId[],
         tailId: null as MessageId | null,
       };
+    }
     const tail = messageIds[messageIds.length - 1]!;
     const history = messageIds.length > 1 ? messageIds.slice(0, -1) : [];
     return { historyIds: history, tailId: tail };
@@ -67,21 +62,18 @@ function ChatList() {
     getItemKey: (index) => historyIds[index] ?? index,
   });
 
-  // Robust scroll-to-bottom that maintains position during dynamic growth
   function scrollToBottom() {
     const container = containerRef.current;
     if (!container) return;
-
     if (rafRef.current !== null) return;
 
     rafRef.current = requestAnimationFrame(() => {
       rafRef.current = null;
       isProgrammaticScrollRef.current = true;
 
-      const currentScrollHeight = container.scrollHeight;
-      lastScrollHeightRef.current = currentScrollHeight;
-
-      container.scrollTop = currentScrollHeight;
+      const scrollHeight = container.scrollHeight;
+      lastScrollHeightRef.current = scrollHeight;
+      container.scrollTop = scrollHeight;
 
       requestAnimationFrame(() => {
         isProgrammaticScrollRef.current = false;
@@ -89,15 +81,12 @@ function ChatList() {
     });
   }
 
-  // Setup ResizeObserver to detect tail message growth
   useEffect(() => {
     const tail = tailRef.current;
     const container = containerRef.current;
     if (!tail || !container) return;
 
-    if (resizeObserverRef.current) {
-      resizeObserverRef.current.disconnect();
-    }
+    resizeObserverRef.current?.disconnect();
 
     let rafId: number | null = null;
 
@@ -106,11 +95,7 @@ function ChatList() {
 
       rafId = requestAnimationFrame(() => {
         rafId = null;
-
         if (isProgrammaticScrollRef.current) return;
-
-        const container = containerRef.current;
-        if (!container) return;
 
         const currentScrollHeight = container.scrollHeight;
         const distanceToBottom =
@@ -131,24 +116,18 @@ function ChatList() {
     resizeObserverRef.current.observe(tail);
 
     return () => {
-      if (rafId !== null) {
-        cancelAnimationFrame(rafId);
-      }
-      if (resizeObserverRef.current) {
-        resizeObserverRef.current.disconnect();
-        resizeObserverRef.current = null;
-      }
+      if (rafId !== null) cancelAnimationFrame(rafId);
+      resizeObserverRef.current?.disconnect();
+      resizeObserverRef.current = null;
     };
   }, [tailId, isAutoScrollEnabled]);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-
     lastScrollHeightRef.current = container.scrollHeight;
   }, []);
 
-  // Handle explicit scroll-to-bottom requests
   useEffect(() => {
     autoScrollLockRef.current = false;
     setIsAutoScrollEnabled(true);
@@ -156,31 +135,26 @@ function ChatList() {
     scrollToBottom();
   }, [scrollToBottomVersion]);
 
-  // Autoscroll during streaming (commitVersion updates)
   useEffect(() => {
-    if (!isAutoScrollEnabled || autoScrollLockRef.current) return;
     if (!isGenerating) return;
+    if (!isAutoScrollEnabled || autoScrollLockRef.current) return;
 
-    // Use double RAF to ensure DOM has updated
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        if (isAutoScrollEnabled && !autoScrollLockRef.current && isGenerating) {
+        if (isGenerating && isAutoScrollEnabled && !autoScrollLockRef.current) {
           scrollToBottom();
         }
       });
     });
   }, [commitVersion, isGenerating, isAutoScrollEnabled]);
 
-  // Autoscroll when generation ends
   useEffect(() => {
     if (isGenerating) return;
     if (!isAutoScrollEnabled || autoScrollLockRef.current) return;
 
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        if (!isGenerating && isAutoScrollEnabled && !autoScrollLockRef.current) {
-          scrollToBottom();
-        }
+        scrollToBottom();
       });
     });
   }, [isGenerating, isAutoScrollEnabled, tailId]);
@@ -191,9 +165,9 @@ function ChatList() {
     const container = containerRef.current;
     if (!container) return;
 
-    const currentScrollHeight = container.scrollHeight;
+    const scrollHeight = container.scrollHeight;
     const distanceToBottom =
-      currentScrollHeight - (container.scrollTop + container.clientHeight);
+      scrollHeight - (container.scrollTop + container.clientHeight);
 
     const atBottom = distanceToBottom <= AUTO_SCROLL_THRESHOLD;
     setIsAtBottom(atBottom);
@@ -202,25 +176,13 @@ function ChatList() {
       setIsAutoScrollEnabled(true);
     }
 
-    lastScrollHeightRef.current = currentScrollHeight;
+    lastScrollHeightRef.current = scrollHeight;
   }
 
   function handleWheel(event: WheelEvent<HTMLDivElement>) {
     if (!isGenerating || !isAutoScrollEnabled) return;
 
     if (event.deltaY < 0) {
-      autoScrollLockRef.current = true;
-      setIsAutoScrollEnabled(false);
-      setIsAtBottom(false);
-    }
-  }
-
-  function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
-    if (!isGenerating || !isAutoScrollEnabled) return;
-
-    const { key, shiftKey } = event;
-
-    if (key === "PageUp" || key === "ArrowUp" || (key === " " && shiftKey)) {
       autoScrollLockRef.current = true;
       setIsAutoScrollEnabled(false);
       setIsAtBottom(false);
@@ -241,14 +203,10 @@ function ChatList() {
         className="
           h-full overflow-y-auto overflow-x-hidden
           px-3 pt-3 pb-28 sm:px-4 sm:pt-4
-          outline-none
-          focus-visible:ring-2 focus-visible:ring-sky-200 focus-visible:ring-offset-2 focus-visible:ring-offset-[#F4F6F8]
           [scrollbar-gutter:stable]
         "
         onScroll={handleScroll}
         onWheel={handleWheel}
-        onKeyDown={handleKeyDown}
-        tabIndex={0}
       >
         <div className="mx-auto w-full max-w-4xl">
           <div
@@ -290,29 +248,10 @@ function ChatList() {
         </div>
       </div>
 
-      <div className="pointer-events-none absolute inset-x-0 bottom-24 z-20 flex items-center justify-end px-3 sm:px-4">
+      <div className="pointer-events-none absolute inset-x-0 bottom-24 z-20 flex justify-end px-3 sm:px-4">
         {(!isAtBottom || autoScrollLockRef.current) && (
           <div className="pointer-events-auto">
-            <Button
-              className="
-                group
-                inline-flex h-10 items-center gap-2 rounded-full
-                border border-slate-200 bg-white/95 px-3.5
-                text-sm font-medium text-slate-700 shadow-sm
-                backdrop-blur
-                cursor-pointer select-none
-                hover:bg-white hover:shadow
-                active:scale-[0.99] active:bg-slate-50
-                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-200 focus-visible:ring-offset-2 focus-visible:ring-offset-[#F4F6F8]
-                disabled:cursor-not-allowed disabled:opacity-60
-              "
-              onClick={handleJumpToBottom}
-            >
-              <span className="leading-none">Вниз</span>
-              <span className="text-slate-400 transition-colors group-hover:text-slate-500">
-                ↓
-              </span>
-            </Button>
+            <Button onClick={handleJumpToBottom}>Вниз</Button>
           </div>
         )}
       </div>
